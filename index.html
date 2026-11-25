@@ -79,10 +79,12 @@ textarea{min-height:130px;resize:vertical}
   <h1>🎄 Hannis Flo<span>HOHO</span>markt</h1>
   <p><span id="cafe"></span> · Anmeldungen, Check-in, Standgebühr &amp; Warteliste</p>
   <p id="savestat" style="font-size:.8rem"></p>
+  <button class="b" id="logout" data-act="logout" style="display:none;margin-top:6px">Abmelden</button>
 </header>
 <main id="app"><div class="empty">Lade …</div></main>
 <div id="ov"><div class="modal" id="modal"></div></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
 const $ = s => document.querySelector(s);
@@ -108,62 +110,85 @@ let db = null;
 const S = { settings:{...DEFAULT_SETTINGS}, tpl:JSON.parse(JSON.stringify(DEFAULT_TPL)), days:[], entries:[], ready:{days:false,entries:false}, day:null, sub:"teil" };
 
 
-/* ---------- Lokaler Speicher (nur dieser Browser) – doppelt gesichert: localStorage + IndexedDB ---------- */
-let STORE=null, STORAGE_OK=true;
+/* ---------- Online-Speicher (Supabase, Server in Frankfurt) ---------- */
+const SB_URL="https://ywsjqlwsbngihhzvqvpz.supabase.co", SB_KEY="sb_publishable__zqBZoQr0HDBR5mKllwMcQ_HW4tZ8Gi";
+let sb=null, STORE=null, STORAGE_OK=true, LAST_SAVED=null;
+const clone=o=>JSON.parse(JSON.stringify(o));
+const SEED=()=>({days:{"d2026-12-06":{date:"2026-12-06"},"d2026-12-13":{date:"2026-12-13"},"d2026-12-20":{date:"2026-12-20"},"d2026-12-27":{date:"2026-12-27"}},settings:{main:{settings:{cafe:"Hanni's Cafe mit Herz",contactEmail:"hello@cafe-hanni.de",fee:5,capacity:10,uhrzeit:"11:00 bis 17:00",aufbau:30}}}});
 function makeStore(){
-  const KEY="hanni-flohmarkt-v1", IDBN="hanni-flohmarkt";
-  const seed=()=>({days:{"d2026-12-06":{date:"2026-12-06"},"d2026-12-13":{date:"2026-12-13"},"d2026-12-20":{date:"2026-12-20"},"d2026-12-27":{date:"2026-12-27"}},entries:{},settings:{main:{settings:{cafe:"Hanni's Cafe mit Herz",contactEmail:"hello@cafe-hanni.de",fee:5,capacity:10,uhrzeit:"11:00 bis 17:00",aufbau:30}}}});
-  let data=null, lsOk=false, idbOk=false;
-  try{ localStorage.setItem(KEY+"-t","1"); lsOk=localStorage.getItem(KEY+"-t")==="1"; localStorage.removeItem(KEY+"-t"); }catch(e){}
-  try{ const r=localStorage.getItem(KEY); if(r){ try{ data=JSON.parse(r); }catch(e){ try{ localStorage.setItem(KEY+"-defekt",r); }catch(_){} } } }catch(e){}
-  const hadLS=!!data;
-  if(!data) data=seed();
+  const data={days:{},entries:{},settings:{},meta:{}}; let pending=0, dirty=false, loaded=false, sig="";
   const subs=[]; const fire=()=>subs.forEach(f=>f());
-  const upd=()=>{ STORAGE_OK=lsOk||idbOk; setStat(); };
-  const idb=(mode,fn)=>new Promise(res=>{ try{
-    const rq=indexedDB.open(IDBN,1);
-    rq.onupgradeneeded=()=>rq.result.createObjectStore("kv");
-    rq.onerror=()=>res(null);
-    rq.onsuccess=()=>{ try{ const db=rq.result, tx=db.transaction("kv",mode), st=tx.objectStore("kv"), q=fn(st);
-      tx.oncomplete=()=>{ const v=q&&q.result; db.close(); res(v===undefined?true:v); }; tx.onerror=()=>{ db.close(); res(null); }; }catch(e){ res(null); } };
-  }catch(e){ res(null); } });
-  const persist=()=>{
-    data._savedAt=Date.now(); const txt=JSON.stringify(data);
-    try{ localStorage.setItem(KEY,txt); lsOk=localStorage.getItem(KEY)===txt; }catch(e){ lsOk=false; }
-    idb("readwrite",st=>st.put(txt,KEY)).then(r=>{ idbOk=r!==null; upd(); });
-    upd();
-  };
-  // Beim Start: IndexedDB prüfen und ggf. die neuere Kopie übernehmen (z. B. wenn localStorage geleert wurde)
-  idb("readonly",st=>st.get(KEY)).then(r=>{
-    idbOk = r!==null;
-    if(typeof r==="string"){ try{ const o=JSON.parse(r);
-      if(o && o.days && o.entries && (!hadLS || (o._savedAt||0)>(data._savedAt||0))){ data=o; try{ localStorage.setItem(KEY,r); }catch(e){} fire(); } }catch(e){} }
-    else if(idbOk && hadLS) idb("readwrite",st=>st.put(JSON.stringify(data),KEY));
-    upd();
-  });
-  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  const nowIso=()=>new Date().toISOString();
+  async function refresh(){
+    if(pending>0){ dirty=true; return false; }
+    const {data:rows,error}=await sb.from("kv").select("collection,id,data");
+    if(error||!rows){ STORAGE_OK=false; setStat(); return false; }
+    if(pending>0){ dirty=true; return false; }
+    const m={days:{},entries:{},settings:{},meta:{}};
+    rows.forEach(r=>{ (m[r.collection]=m[r.collection]||{})[r.id]=r.data; });
+    const s=JSON.stringify(m); STORAGE_OK=true;
+    if(s!==sig){ sig=s; for(const k of Object.keys(m)) data[k]=m[k]; if(loaded) fire(); }
+    setStat(); return true;
+  }
+  async function load(){
+    const ok=await refresh();
+    if(ok && !data.meta.seeded){
+      const sd=SEED(), rows=[{collection:"meta",id:"seeded",data:{at:Date.now()}}];
+      for(const c in sd) for(const id in sd[c]) rows.push({collection:c,id,data:sd[c][id]});
+      const {error}=await sb.from("kv").upsert(rows); if(!error) await refresh();
+    }
+    loaded=true; fire();
+  }
+  async function write(fn){
+    pending++;
+    try{ const {error}=await fn(); if(error) throw error; LAST_SAVED=Date.now(); STORAGE_OK=true; setStat(); }
+    catch(e){ STORAGE_OK=false; dirty=true; setStat(); throw e; }
+    finally{ pending--; if(pending===0&&dirty){ dirty=false; refresh(); } }
+  }
+  const put=(c,id,d)=>write(()=>sb.from("kv").upsert({collection:c,id,data:d,updated_at:nowIso()}));
   const colSnap=c=>Object.keys(data[c]||{}).map(id=>({id,data:data[c][id]}));
   const docSnap=(c,id)=>({id,exists:!!(data[c]&&data[c][id]),data:(data[c]&&data[c][id])||{}});
-  upd();
+  const listen=f=>{ subs.push(f); if(loaded) setTimeout(f,0); };
   return {
-    collection(c){ return { onSnapshot(cb){ const f=()=>cb(colSnap(c)); subs.push(f); setTimeout(f,0); } }; },
-    doc(p){ const [c,id]=p.split("/"); data[c]=data[c]||{};
+    load, refresh,
+    collection(c){ return { onSnapshot(cb){ listen(()=>cb(colSnap(c))); } }; },
+    doc(p){ const [c,id]=p.split("/");
       return {
-        async set(d){ data[c]=data[c]||{}; data[c][id]=JSON.parse(JSON.stringify(d)); persist(); fire(); },
-        async update(d){ data[c]=data[c]||{}; data[c][id]={...(data[c][id]||{}),...JSON.parse(JSON.stringify(d))}; persist(); fire(); },
-        async delete(){ if(data[c]) delete data[c][id]; persist(); fire(); },
-        onSnapshot(cb){ const f=()=>cb(docSnap(c,id)); subs.push(f); setTimeout(f,0); }
+        async set(d){ (data[c]=data[c]||{})[id]=clone(d); fire(); await put(c,id,data[c][id]); },
+        async update(d){ (data[c]=data[c]||{})[id]={...(data[c][id]||{}),...clone(d)}; fire(); await put(c,id,data[c][id]); },
+        async delete(){ if(data[c]) delete data[c][id]; fire(); await write(()=>sb.from("kv").delete().eq("collection",c).eq("id",id)); },
+        onSnapshot(cb){ listen(()=>cb(docSnap(c,id))); }
       }; },
-    export(){ return JSON.stringify(data,null,1); },
-    import(txt){ const o=JSON.parse(txt); if(!o||typeof o!=="object"||!o.days||!o.entries||!o.settings) throw new Error("bad"); data=o; persist(); fire(); },
-    markBackup(){ data._backupAt=Date.now(); persist(); },
-    info(){ return {savedAt:data._savedAt||null, backupAt:data._backupAt||null, ok:lsOk||idbOk, entries:Object.keys(data.entries||{}).length}; }
+    export(){ return JSON.stringify({days:data.days,entries:data.entries,settings:data.settings},null,1); },
+    import(txt){
+      const o=JSON.parse(txt); if(!o||typeof o!=="object"||!o.days||!o.entries||!o.settings) throw new Error("bad");
+      const rows=[], keep=new Set(), del=[], cols=["days","entries","settings"];
+      for(const c of cols) for(const id in o[c]){ rows.push({collection:c,id,data:o[c][id],updated_at:nowIso()}); keep.add(c+"/"+id); }
+      for(const c of cols) for(const id in data[c]) if(!keep.has(c+"/"+id)) del.push([c,id]);
+      for(const c of cols) data[c]=clone(o[c]);
+      fire();
+      (async()=>{ try{ await write(()=>sb.from("kv").upsert(rows)); for(const [c,id] of del) await write(()=>sb.from("kv").delete().eq("collection",c).eq("id",id)); }catch(e){ toast("Wiederherstellen fehlgeschlagen."); } })();
+    },
+    markBackup(){ try{ localStorage.setItem("hanni-backup-at",String(Date.now())); }catch(e){} },
+    info(){ return {savedAt:LAST_SAVED, ok:STORAGE_OK}; }
   };
 }
 function setStat(){
   const el=document.getElementById("savestat"); if(!el||!STORE) return;
   const i=STORE.info();
-  el.innerHTML = i.ok ? ("💾 Automatisch gespeichert auf diesem Gerät"+(i.savedAt?" · zuletzt "+new Date(i.savedAt).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}):"")) : "⚠️ Speichern nicht möglich";
+  el.innerHTML = i.ok ? ("☁️ Online gespeichert (Server in Frankfurt)"+(i.savedAt?" · zuletzt "+new Date(i.savedAt).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}):"")) : "⚠️ Keine Verbindung zum Server – Änderungen werden nicht gespeichert";
+}
+function showLogin(msg){
+  $("#logout").style.display="none";
+  $("#app").innerHTML = `<div class="panel" style="max-width:420px;margin:24px auto"><b>Anmelden</b><div class="note">Bitte mit der E-Mail-Adresse und dem Passwort anmelden, die du bekommen hast.</div>
+    <form id="lf"><label>E-Mail</label><input id="l_mail" type="email" autocomplete="username" required><label>Passwort</label><input id="l_pw" type="password" autocomplete="current-password" required>
+    <div id="l_err" class="err">${msg||""}</div><div class="mfoot"><button class="b pri" type="submit">Anmelden</button></div></form></div>`;
+  $("#lf").addEventListener("submit",async ev=>{
+    ev.preventDefault(); const btn=ev.target.querySelector("button"); btn.disabled=true;
+    let error=null; try{ ({error}=await sb.auth.signInWithPassword({email:$("#l_mail").value.trim(),password:$("#l_pw").value})); }catch(e){ error=e; }
+    if(error){ btn.disabled=false; $("#l_err").textContent=(error.status===0||/fetch|network/i.test(error.message||""))?"Keine Verbindung zum Server.":"E-Mail oder Passwort stimmt nicht."; return; }
+    startApp();
+  });
 }
 
 /* ---------- Daten ---------- */
@@ -228,8 +253,7 @@ function render(){
   if(!S.day) S.day = days.find(d=>daysUntil(d.id)>=0)?.id || days[0]?.id || "settings";
   if(S.day!=="settings" && !days.find(d=>d.id===S.day)) S.day = days[0]?.id || "settings";
 
-  let h = STORAGE_OK ? "" : `<div class="banner">⚠️ Dieser Browser speichert nicht (z. B. Privatmodus oder Vorschau in WhatsApp). Einträge gehen beim Schließen verloren. Bitte den Link direkt in Chrome, Safari oder Firefox öffnen – nicht im privaten Modus.</div>`;
-  { const i=STORE?STORE.info():null; if(i && i.ok && i.entries>0 && (!i.backupAt || Date.now()-i.backupAt>7*864e5)) h += `<div class="banner">💾 Tipp: Bitte einmal eine Datensicherung machen (Einstellungen → Daten sichern), damit nichts verloren geht. <button class="b" data-act="day" data-id="settings">Zu den Einstellungen</button></div>`; }
+  let h = STORAGE_OK ? "" : `<div class="banner">⚠️ Keine Verbindung zum Server – Änderungen werden aktuell nicht gespeichert. Bitte Internet prüfen und die Seite neu laden.</div>`;
   h += `<div class="tabs">` + days.map(d=>`<button class="tab ${S.day===d.id?"on":""}" data-act="day" data-id="${d.id}">${fmtShort(d.id)}</button>`).join("") +
           `<button class="tab add" data-act="addday">+ Sonntag</button><button class="tab ${S.day==="settings"?"on":""}" data-act="day" data-id="settings">⚙ Einstellungen</button></div>`;
   if(S.day==="settings") h += renderSettings();
@@ -300,7 +324,7 @@ function renderSettings(){
     ${s.contactEmail?"":`<div class="err">Bitte hier die Kontakt-E-Mail eintragen, sonst fehlt sie in den E-Mails.</div>`}</div>
     <div class="note" style="margin:8px 4px">Platzhalter in den Vorlagen: {vorname} {name} {datum} {stand} {gebuehr} {kontakt} {cafe} {aufbau} {uhrzeit}. Zeilen mit leerem Platzhalter (z. B. kein Beginn eingetragen) werden automatisch weggelassen.</div>
     ${tpl("confirm","E-Mail-Vorlage: Anmeldebestätigung")}${tpl("wait","E-Mail-Vorlage: Warteliste")}${tpl("remind","E-Mail-Vorlage: Erinnerung (1 Tag vorher)")}
-    <div class="panel"><b>Datensicherung</b><div class="note">Alle Einträge liegen nur in diesem Browser auf diesem Gerät. Bitte regelmäßig sichern, besonders vor dem Löschen von Browserdaten.</div><div class="acts" style="margin-top:10px"><button class="b" data-act="backup">Daten sichern</button><button class="b" data-act="restore">Daten wiederherstellen</button></div></div>
+    <div class="panel"><b>Datensicherung</b><div class="note">Alle Einträge werden online gespeichert (Server in Frankfurt) und sind auf jedem Gerät sichtbar. Eine zusätzliche Sicherung als Datei ist trotzdem sinnvoll.</div><div class="acts" style="margin-top:10px"><button class="b" data-act="backup">Daten sichern</button><button class="b" data-act="restore">Daten wiederherstellen</button></div></div>
     <div class="acts"><button class="b pri" data-act="savesettings">Einstellungen speichern</button><button class="b" data-act="resettpl">Vorlagen zurücksetzen</button></div>`;
 }
 
@@ -392,16 +416,17 @@ document.addEventListener("click", async ev=>{
     case "restore":
       openModal(`<h3>Daten wiederherstellen</h3><div class="note">Achtung: Das ersetzt alle aktuellen Einträge. Füge den gesicherten Text ein.</div><textarea id="rs" style="min-height:220px"></textarea><div id="rs_err" class="err"></div><div class="mfoot"><button class="b" data-act="close">Abbrechen</button><button class="b pri" data-act="dorestore">Wiederherstellen</button></div>`); break;
     case "dorestore": try{ STORE.import($("#rs").value); closeModal(); toast("Wiederhergestellt ✓"); }catch(e){ $("#rs_err").textContent="Der Text ist ungültig."; } break;
+    case "logout": try{ await sb.auth.signOut(); }catch(e){} location.reload(); break;
     case "resettpl": { const settings=S.settings; await save("settings/main",{settings,tpl:DEFAULT_TPL}); toast("Vorlagen zurückgesetzt."); break; }
   }
 });
 
 /* ---------- Start ---------- */
-(async function init(){
+async function startApp(){
+  $("#logout").style.display="";
   STORE=makeStore(); db=STORE;
-  if(!db){ render(); return; }
   render();
-  const timer=setTimeout(()=>{ if(!S.ready.days||!S.ready.entries){ S.ready.days=S.ready.entries=true; render(); } },10000);
+  const timer=setTimeout(()=>{ if(!S.ready.days||!S.ready.entries){ S.ready.days=S.ready.entries=true; render(); } },12000);
   const onErr=e=>{ console.error(e); S.ready.days=S.ready.entries=true; render(); };
   db.collection("days").onSnapshot(s=>{ S.days=rowsOf(s); S.ready.days=true; clearTimeout(timer); render(); },onErr);
   db.collection("entries").onSnapshot(s=>{ S.entries=rowsOf(s); S.ready.entries=true; clearTimeout(timer); render(); },onErr);
@@ -410,6 +435,17 @@ document.addEventListener("click", async ev=>{
     if(d && d.settings) mergeSettings(d); else { S.settings={...DEFAULT_SETTINGS}; S.tpl=JSON.parse(JSON.stringify(DEFAULT_TPL)); }
     render();
   },onErr);
+  await STORE.load();
+  sb.channel("kv-live").on("postgres_changes",{event:"*",schema:"public",table:"kv"},()=>STORE.refresh()).subscribe();
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) STORE.refresh(); });
+  setInterval(()=>STORE.refresh(),60000);
+}
+(async function init(){
+  if(!window.supabase){ $("#app").innerHTML=`<div class="panel empty">Der Server ist gerade nicht erreichbar.<br>Bitte lade die Seite neu.</div>`; return; }
+  sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+  sb.auth.onAuthStateChange(ev=>{ if(ev==="SIGNED_OUT" && STORE) location.reload(); });
+  let session=null; try{ ({data:{session}}=await sb.auth.getSession()); }catch(e){}
+  if(session) startApp(); else showLogin();
 })();
 </script>
 </body>
