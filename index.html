@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hannis FloHOHOmarkt</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="Hannis FloHOHOmarkt – Anmeldungen bei Hanni's Cafe mit Herz">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hannis FloHOHOmarkt">
+<meta property="og:description" content="Anmeldungen, Check-in &amp; Warteliste">
+<meta name="theme-color" content="#2f5d4e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%B7%EF%B8%8F%3C/text%3E%3C/svg%3E">
+
+<style>
+:root{--bg:#f6f4ee;--card:#fff;--ink:#2b2420;--mute:#7a6d63;--line:#eadfd2;--accent:#2f5d4e;--accent-d:#234739;--ok:#2f7d4f;--okbg:#e5f3ea;--warn:#b7791f;--warnbg:#fdf1d8;--free:#eef3f0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{padding:20px 16px 8px;max-width:980px;margin:0 auto}
+header h1{margin:0;font-size:1.5rem}
+header h1 span{font-weight:900;font-style:italic}
+header p{margin:4px 0 0;color:var(--mute);font-size:.95rem}
+main{max-width:980px;margin:0 auto;padding:8px 16px 60px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.tab{border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:999px;cursor:pointer;font:inherit;color:var(--ink)}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab.add{border-style:dashed;color:var(--accent)}
+.sub{display:flex;gap:0;border-bottom:2px solid var(--line);margin:14px 0}
+.sub button{background:none;border:0;padding:10px 16px;font:inherit;cursor:pointer;color:var(--mute);border-bottom:3px solid transparent;margin-bottom:-2px}
+.sub button.on{color:var(--accent);border-color:var(--accent);font-weight:600}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:1.4rem}
+.stat small{color:var(--mute)}
+.grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{min-width:44px;text-align:center;padding:6px 8px;border-radius:10px;background:var(--free);color:var(--mute);font-size:.85rem;border:1px solid var(--line)}
+.chip.res{background:var(--warnbg);color:var(--warn);border-color:#f0d79c}
+.chip.in{background:var(--okbg);color:var(--ok);border-color:#b5dcc2}
+.row{display:grid;grid-template-columns:64px 1fr;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--card);margin:10px 0}
+.nr{width:56px;height:56px;border-radius:14px;background:var(--accent);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:1.4rem;line-height:1}
+.nr small{font-size:.6rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
+.nr.w{background:#b9aea3}
+.row.done{background:#f7fbf8;border-color:#b5dcc2}
+.name{font-weight:600;font-size:1.05rem}
+.meta{color:var(--mute);font-size:.9rem;margin:2px 0 8px;word-break:break-word}
+.meta a{color:var(--mute)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button.b,a.b{font:inherit;font-size:.88rem;padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button.b:hover,a.b:hover{border-color:var(--accent)}
+.b.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.b.pri:hover{background:var(--accent-d)}
+.b.danger{color:#b3261e}
+.tog{font:inherit;font-size:.88rem;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--mute)}
+.tog.on{background:var(--okbg);border-color:#9fd2b3;color:var(--ok);font-weight:600}
+.tag{font-size:.78rem;padding:2px 8px;border-radius:999px;background:var(--okbg);color:var(--ok);margin-left:6px}
+.banner{padding:12px 14px;border-radius:12px;background:var(--warnbg);color:#6b4a0c;margin:12px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.banner.ok{background:var(--okbg);color:#1f5a38}
+.head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.head h2{margin:0;font-size:1.2rem}
+.empty{color:var(--mute);text-align:center;padding:24px 8px}
+label{display:block;font-size:.85rem;color:var(--mute);margin:10px 0 4px}
+input,textarea,select{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+textarea{min-height:130px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.two{grid-template-columns:1fr}.row{grid-template-columns:52px 1fr}.nr{width:48px;height:48px}}
+#ov{position:fixed;inset:0;background:rgba(43,36,32,.45);display:none;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto;z-index:10}
+#ov.on{display:flex}
+.modal{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:620px;margin:auto}
+.modal h3{margin:0 0 6px}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+.copyrow{display:flex;gap:8px;align-items:flex-end}.copyrow>div{flex:1}
+.note{color:var(--mute);font-size:.85rem}
+.err{color:#b3261e;font-size:.9rem;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎄 Hannis Flo<span>HOHO</span>markt</h1>
+  <p><span id="cafe"></span> · Anmeldungen, Check-in, Standgebühr &amp; Warteliste</p>
+  <p id="savestat" style="font-size:.8rem"></p>
+</header>
+<main id="app"><div class="empty">Lade …</div></main>
+<div id="ov"><div class="modal" id="modal"></div></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const DEFAULT_TPL = {
+  confirm: {
+    subject: "Deine Anmeldung zum FloHOHOmarkt am {datum} – Stand Nr. {stand}",
+    body: "Hallo {vorname},\n\nschön, dass du dabei bist! Hiermit bestätigen wir deine Anmeldung zum Hannis FloHOHOmarkt bei {cafe} am {datum}.\n\nDeine Standnummer: {stand}\nBeginn: {uhrzeit}\n\nBitte beachte:\n• Die Standgebühr beträgt {gebuehr}.\n• Bitte bring deine eigene Kleiderstange mit.\n• Bitte bring außerdem deine eigene Kasse mit ausreichend Wechselgeld mit.\n• Aufbau: Bitte komm höchstens {aufbau} Minuten vor Beginn, um deinen Stand aufzubauen.\n• Falls du kurzfristig absagen musst, schreib uns bitte per E-Mail an {kontakt}.\n\nWir freuen uns auf dich!\nHerzliche Grüße\n{cafe}"
+  },
+  wait: {
+    subject: "Warteliste FloHOHOmarkt am {datum}",
+    body: "Hallo {vorname},\n\nvielen Dank für deine Anmeldung zum Hannis FloHOHOmarkt bei {cafe} am {datum}. Leider sind aktuell alle Stände vergeben – du stehst auf der Warteliste.\n\nSobald ein Platz frei wird, melden wir uns sofort bei dir mit deiner Standnummer.\n\nHerzliche Grüße\n{cafe}"
+  },
+  remind: {
+    subject: "Erinnerung: FloHOHOmarkt morgen, {datum}",
+    body: "Hallo {vorname},\n\nkleine Erinnerung: Morgen, {datum}, findet der Hannis FloHOHOmarkt bei {cafe} statt.\n\nDeine Standnummer: {stand}\nBeginn: {uhrzeit}\n\nBitte denk an:\n• Standgebühr: {gebuehr}\n• Eigene Kleiderstange\n• Eigene Kasse mit Wechselgeld\n• Aufbau höchstens {aufbau} Minuten vor Beginn\n• Falls du kurzfristig nicht kommen kannst: bitte kurz per E-Mail an {kontakt}.\n\nWir freuen uns auf dich!\nHerzliche Grüße\n{cafe}"
+  }
+};
+const DEFAULT_SETTINGS = {cafe:"Hanni's Cafe mit Herz", contactEmail:"", fee:5, capacity:10, uhrzeit:"", aufbau:30};
+
+let db = null;
+const S = { settings:{...DEFAULT_SETTINGS}, tpl:JSON.parse(JSON.stringify(DEFAULT_TPL)), days:[], entries:[], ready:{days:false,entries:false}, day:null, sub:"teil" };
+
+
+/* ---------- Lokaler Speicher (nur dieser Browser) – doppelt gesichert: localStorage + IndexedDB ---------- */
+let STORE=null, STORAGE_OK=true;
+function makeStore(){
+  const KEY="hanni-flohmarkt-v1", IDBN="hanni-flohmarkt";
+  const seed=()=>({days:{"d2026-12-06":{date:"2026-12-06"},"d2026-12-13":{date:"2026-12-13"},"d2026-12-20":{date:"2026-12-20"},"d2026-12-27":{date:"2026-12-27"}},entries:{},settings:{main:{settings:{cafe:"Hanni's Cafe mit Herz",contactEmail:"hello@cafe-hanni.de",fee:5,capacity:10,uhrzeit:"11:00 bis 17:00",aufbau:30}}}});
+  let data=null, lsOk=false, idbOk=false;
+  try{ localStorage.setItem(KEY+"-t","1"); lsOk=localStorage.getItem(KEY+"-t")==="1"; localStorage.removeItem(KEY+"-t"); }catch(e){}
+  try{ const r=localStorage.getItem(KEY); if(r){ try{ data=JSON.parse(r); }catch(e){ try{ localStorage.setItem(KEY+"-defekt",r); }catch(_){} } } }catch(e){}
+  const hadLS=!!data;
+  if(!data) data=seed();
+  const subs=[]; const fire=()=>subs.forEach(f=>f());
+  const upd=()=>{ STORAGE_OK=lsOk||idbOk; setStat(); };
+  const idb=(mode,fn)=>new Promise(res=>{ try{
+    const rq=indexedDB.open(IDBN,1);
+    rq.onupgradeneeded=()=>rq.result.createObjectStore("kv");
+    rq.onerror=()=>res(null);
+    rq.onsuccess=()=>{ try{ const db=rq.result, tx=db.transaction("kv",mode), st=tx.objectStore("kv"), q=fn(st);
+      tx.oncomplete=()=>{ const v=q&&q.result; db.close(); res(v===undefined?true:v); }; tx.onerror=()=>{ db.close(); res(null); }; }catch(e){ res(null); } };
+  }catch(e){ res(null); } });
+  const persist=()=>{
+    data._savedAt=Date.now(); const txt=JSON.stringify(data);
+    try{ localStorage.setItem(KEY,txt); lsOk=localStorage.getItem(KEY)===txt; }catch(e){ lsOk=false; }
+    idb("readwrite",st=>st.put(txt,KEY)).then(r=>{ idbOk=r!==null; upd(); });
+    upd();
+  };
+  // Beim Start: IndexedDB prüfen und ggf. die neuere Kopie übernehmen (z. B. wenn localStorage geleert wurde)
+  idb("readonly",st=>st.get(KEY)).then(r=>{
+    idbOk = r!==null;
+    if(typeof r==="string"){ try{ const o=JSON.parse(r);
+      if(o && o.days && o.entries && (!hadLS || (o._savedAt||0)>(data._savedAt||0))){ data=o; try{ localStorage.setItem(KEY,r); }catch(e){} fire(); } }catch(e){} }
+    else if(idbOk && hadLS) idb("readwrite",st=>st.put(JSON.stringify(data),KEY));
+    upd();
+  });
+  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  const colSnap=c=>Object.keys(data[c]||{}).map(id=>({id,data:data[c][id]}));
+  const docSnap=(c,id)=>({id,exists:!!(data[c]&&data[c][id]),data:(data[c]&&data[c][id])||{}});
+  upd();
+  return {
+    collection(c){ return { onSnapshot(cb){ const f=()=>cb(colSnap(c)); subs.push(f); setTimeout(f,0); } }; },
+    doc(p){ const [c,id]=p.split("/"); data[c]=data[c]||{};
+      return {
+        async set(d){ data[c]=data[c]||{}; data[c][id]=JSON.parse(JSON.stringify(d)); persist(); fire(); },
+        async update(d){ data[c]=data[c]||{}; data[c][id]={...(data[c][id]||{}),...JSON.parse(JSON.stringify(d))}; persist(); fire(); },
+        async delete(){ if(data[c]) delete data[c][id]; persist(); fire(); },
+        onSnapshot(cb){ const f=()=>cb(docSnap(c,id)); subs.push(f); setTimeout(f,0); }
+      }; },
+    export(){ return JSON.stringify(data,null,1); },
+    import(txt){ const o=JSON.parse(txt); if(!o||typeof o!=="object"||!o.days||!o.entries||!o.settings) throw new Error("bad"); data=o; persist(); fire(); },
+    markBackup(){ data._backupAt=Date.now(); persist(); },
+    info(){ return {savedAt:data._savedAt||null, backupAt:data._backupAt||null, ok:lsOk||idbOk, entries:Object.keys(data.entries||{}).length}; }
+  };
+}
+function setStat(){
+  const el=document.getElementById("savestat"); if(!el||!STORE) return;
+  const i=STORE.info();
+  el.innerHTML = i.ok ? ("💾 Automatisch gespeichert auf diesem Gerät"+(i.savedAt?" · zuletzt "+new Date(i.savedAt).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}):"")) : "⚠️ Speichern nicht möglich";
+}
+
+/* ---------- Daten ---------- */
+function dataOf(d){
+  if(d==null) return {};
+  let x = typeof d.data==="function" ? d.data() : (d.data && typeof d.data==="object" ? d.data : d);
+  return {...x, id: d.id ?? x.id};
+}
+function rowsOf(snap){
+  let arr=[];
+  if(Array.isArray(snap)) arr=snap;
+  else if(snap && Array.isArray(snap.docs)) arr=snap.docs;
+  else if(snap && typeof snap.forEach==="function") snap.forEach(d=>arr.push(d));
+  return arr.map(dataOf);
+}
+function mergeSettings(raw){
+  if(!raw) return;
+  S.settings = {...DEFAULT_SETTINGS, ...(raw.settings||{})};
+  const t = raw.tpl||{};
+  S.tpl = {};
+  for(const k of Object.keys(DEFAULT_TPL)) S.tpl[k] = {...DEFAULT_TPL[k], ...(t[k]||{})};
+}
+function uid(p){ return p + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+async function save(path, data){ try{ await db.doc(path).set(data); }catch(e){ toast("Speichern fehlgeschlagen. Bitte Seite neu laden."); console.error(e);} }
+async function patch(path, data){ try{ const r=db.doc(path); if(r.update) await r.update(data); else await r.set(data,{merge:true}); }catch(e){ toast("Speichern fehlgeschlagen. Bitte Seite neu laden."); console.error(e);} }
+async function remove(path){ try{ await db.doc(path).delete(); }catch(e){ toast("Löschen fehlgeschlagen."); console.error(e);} }
+
+function toast(msg){ const t=document.createElement("div"); t.textContent=msg; t.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2b2420;color:#fff;padding:10px 16px;border-radius:10px;z-index:20;max-width:90%"; document.body.appendChild(t); setTimeout(()=>t.remove(),3500); }
+
+/* ---------- Hilfen ---------- */
+const fmtDate = id => new Date(id.slice(1)+"T12:00:00").toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+const fmtShort = id => new Date(id.slice(1)+"T12:00:00").toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit"});
+const money = n => Number(n).toLocaleString("de-DE",{minimumFractionDigits:0,maximumFractionDigits:2})+" €";
+function daysUntil(id){ const a=new Date(id.slice(1)+"T00:00:00"), b=new Date(); b.setHours(0,0,0,0); return Math.round((a-b)/864e5); }
+const dayEntries = id => S.entries.filter(e=>e.dayId===id).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+const regs  = id => dayEntries(id).filter(e=>e.status==="angemeldet").sort((a,b)=>(a.stand||99)-(b.stand||99));
+const waits = id => dayEntries(id).filter(e=>e.status==="warteliste");
+function freeStand(id, skipEntry){ const used=new Set(regs(id).filter(e=>e.id!==skipEntry).map(e=>e.stand)); for(let i=1;i<=S.settings.capacity;i++) if(!used.has(i)) return i; return null; }
+
+function vars(entry, day){
+  const s=S.settings;
+  return {
+    vorname: (entry?.name||"").trim().split(/\s+/)[0]||"", name: entry?.name||"",
+    datum: fmtDate(day), stand: entry?.stand ? String(entry.stand) : "",
+    gebuehr: money(s.fee), kontakt: s.contactEmail||"", cafe: s.cafe,
+    aufbau: String(s.aufbau), uhrzeit: s.uhrzeit ? s.uhrzeit+" Uhr" : ""
+  };
+}
+function fill(tpl, v){
+  const one = str => str.split("\n").filter(l=>{ const m=l.match(/\{(\w+)\}/g)||[]; return !m.some(x=>v[x.slice(1,-1)]===""); }).join("\n").replace(/\{(\w+)\}/g,(m,k)=>v[k]??m);
+  return one(tpl);
+}
+
+/* ---------- Render ---------- */
+function render(){
+  const app = $("#app");
+  $("#cafe").textContent = S.settings.cafe || ""; setStat();
+  if(!db){ app.innerHTML = `<div class="panel empty">Die Daten können gerade nicht geladen werden.<br>Bitte lade die Seite neu oder öffne sie in einem anderen Browser.</div>`; return; }
+  if(!S.ready.days || !S.ready.entries){ app.innerHTML = `<div class="empty">Lade …</div>`; return; }
+  const days = [...S.days].sort((a,b)=>a.id.localeCompare(b.id));
+  if(!S.day) S.day = days.find(d=>daysUntil(d.id)>=0)?.id || days[0]?.id || "settings";
+  if(S.day!=="settings" && !days.find(d=>d.id===S.day)) S.day = days[0]?.id || "settings";
+
+  let h = STORAGE_OK ? "" : `<div class="banner">⚠️ Dieser Browser speichert nicht (z. B. Privatmodus oder Vorschau in WhatsApp). Einträge gehen beim Schließen verloren. Bitte den Link direkt in Chrome, Safari oder Firefox öffnen – nicht im privaten Modus.</div>`;
+  { const i=STORE?STORE.info():null; if(i && i.ok && i.entries>0 && (!i.backupAt || Date.now()-i.backupAt>7*864e5)) h += `<div class="banner">💾 Tipp: Bitte einmal eine Datensicherung machen (Einstellungen → Daten sichern), damit nichts verloren geht. <button class="b" data-act="day" data-id="settings">Zu den Einstellungen</button></div>`; }
+  h += `<div class="tabs">` + days.map(d=>`<button class="tab ${S.day===d.id?"on":""}" data-act="day" data-id="${d.id}">${fmtShort(d.id)}</button>`).join("") +
+          `<button class="tab add" data-act="addday">+ Sonntag</button><button class="tab ${S.day==="settings"?"on":""}" data-act="day" data-id="settings">⚙ Einstellungen</button></div>`;
+  if(S.day==="settings") h += renderSettings();
+  else if(!days.length) h += `<div class="panel empty">Noch kein Flohmarkt-Sonntag angelegt.<br><br><button class="b pri" data-act="addday">+ Ersten Sonntag hinzufügen</button></div>`;
+  else h += renderDay(S.day);
+  app.innerHTML = h;
+}
+
+function renderDay(id){
+  const R=regs(id), W=waits(id), cap=S.settings.capacity, fee=S.settings.fee;
+  const paid=R.filter(e=>e.paid).length, inn=R.filter(e=>e.checkedIn).length;
+  const left=daysUntil(id);
+  let h = `<div class="head"><h2>${esc(fmtDate(id))}</h2><div class="acts">
+    <button class="b" data-act="remindall" data-id="${id}">✉ Erinnerung an alle</button>
+    <button class="b danger" data-act="delday" data-id="${id}">Tag löschen</button></div></div>`;
+  if(left===1) h += `<div class="banner">⏰ Morgen ist Flohmarkt! Jetzt die Erinnerung verschicken. <button class="b pri" data-act="remindall" data-id="${id}">Erinnerung vorbereiten</button></div>`;
+  if(left===0) h += `<div class="banner ok">🎉 Heute ist Flohmarkt – viel Erfolg!</div>`;
+  h += `<div class="stats">
+    <div class="stat"><b>${R.length}/${cap}</b><small>Stände vergeben</small></div>
+    <div class="stat"><b>${inn}/${R.length}</b><small>Eingecheckt</small></div>
+    <div class="stat"><b>${paid}/${R.length}</b><small>Gebühr bezahlt</small></div>
+    <div class="stat"><b>${money(paid*fee)}</b><small>Eingenommen (offen: ${money((R.length-paid)*fee)})</small></div>
+    <div class="stat"><b>${W.length}</b><small>Warteliste</small></div></div>`;
+  h += `<div class="grid">` + Array.from({length:cap},(_,i)=>{ const e=R.find(x=>x.stand===i+1); return `<div class="chip ${e?(e.checkedIn?"in":"res"):""}" title="${e?esc(e.name):"frei"}">${i+1}${e?" · "+esc(e.name.split(" ")[0]):""}</div>`; }).join("") + `</div>
+    <div class="note">Grün = eingecheckt · Gelb = angemeldet · Grau = frei</div>`;
+
+  if(free(id)!==null && W.length) h += `<div class="banner">Ein Platz ist frei. Nächste auf der Warteliste: <b>${esc(W[0].name)}</b> <button class="b pri" data-act="promote" data-id="${W[0].id}">Nachrücken lassen (Stand ${free(id)})</button></div>`;
+
+  h += `<div class="sub"><button class="${S.sub==="teil"?"on":""}" data-act="sub" data-id="teil">Teilnehmer:innen (${R.length})</button><button class="${S.sub==="warte"?"on":""}" data-act="sub" data-id="warte">Warteliste (${W.length})</button></div>`;
+  h += `<div class="acts" style="margin-bottom:6px"><button class="b pri" data-act="addentry" data-id="${id}">+ Person anmelden</button></div>`;
+  const list = S.sub==="teil" ? R : W;
+  h += list.length ? list.map(e=>renderEntry(e,id)).join("") : `<div class="empty">${S.sub==="teil"?"Noch keine Anmeldungen.":"Die Warteliste ist leer."}</div>`;
+  return h;
+}
+function free(id){ return freeStand(id); }
+
+function renderEntry(e,day){
+  const w = e.status==="warteliste";
+  return `<div class="row ${e.checkedIn&&!w?"done":""}">
+    <div class="nr ${w?"w":""}">${w?`<small>Warte</small>${waits(day).indexOf(e)+1}`:`<small>Stand</small>${e.stand}`}</div>
+    <div>
+      <div class="name">${esc(e.name)}${e.confirmSent?`<span class="tag">✓ Bestätigung gesendet</span>`:""}</div>
+      <div class="meta">${e.email?`<a href="mailto:${esc(e.email)}">${esc(e.email)}</a>`:"<i>keine E-Mail</i>"}${e.phone?` · ${esc(e.phone)}`:""}${e.note?`<br>📝 ${esc(e.note)}`:""}</div>
+      <div class="acts">
+        ${w?`<button class="b pri" data-act="promote" data-id="${e.id}" ${free(day)===null?"disabled title='Aktuell ist kein Stand frei'":""}>Nachrücken</button>
+             <button class="b" data-act="mail" data-kind="wait" data-id="${e.id}">✉ Wartelisten-Mail</button>`
+          :`<button class="tog ${e.checkedIn?"on":""}" data-act="checkin" data-id="${e.id}">${e.checkedIn?"✓ Eingecheckt":"Einchecken"}</button>
+            <button class="tog ${e.paid?"on":""}" data-act="paid" data-id="${e.id}">${e.paid?`✓ ${money(S.settings.fee)} bezahlt`:`${money(S.settings.fee)} offen`}</button>
+            <button class="b" data-act="mail" data-kind="confirm" data-id="${e.id}">✉ Bestätigung</button>
+            <button class="b" data-act="mail" data-kind="remind" data-id="${e.id}">⏰ Erinnerung</button>`}
+        <button class="b" data-act="edit" data-id="${e.id}">Bearbeiten</button>
+        <button class="b danger" data-act="del" data-id="${e.id}">Absage / Löschen</button>
+      </div></div></div>`;
+}
+
+function renderSettings(){
+  const s=S.settings, t=S.tpl;
+  const tpl = (k,label)=>`<div class="panel"><b>${label}</b>
+    <label>Betreff</label><input id="t_${k}_s" value="${esc(t[k].subject)}">
+    <label>Text</label><textarea id="t_${k}_b" style="min-height:220px">${esc(t[k].body)}</textarea></div>`;
+  return `<div class="panel"><b>Allgemein</b>
+    <div class="two"><div><label>Name des Cafés</label><input id="s_cafe" value="${esc(s.cafe)}"></div>
+    <div><label>Kontakt-E-Mail für Absagen</label><input id="s_mail" type="email" placeholder="z. B. flohmarkt@…" value="${esc(s.contactEmail)}"></div>
+    <div><label>Standgebühr (€)</label><input id="s_fee" type="number" min="0" step="0.5" value="${esc(s.fee)}"></div>
+    <div><label>Plätze pro Sonntag</label><input id="s_cap" type="number" min="1" max="50" value="${esc(s.capacity)}"></div>
+    <div><label>Beginn (z. B. 11:00)</label><input id="s_time" value="${esc(s.uhrzeit)}"></div>
+    <div><label>Aufbau höchstens … Minuten vorher</label><input id="s_set" type="number" min="0" value="${esc(s.aufbau)}"></div></div>
+    ${s.contactEmail?"":`<div class="err">Bitte hier die Kontakt-E-Mail eintragen, sonst fehlt sie in den E-Mails.</div>`}</div>
+    <div class="note" style="margin:8px 4px">Platzhalter in den Vorlagen: {vorname} {name} {datum} {stand} {gebuehr} {kontakt} {cafe} {aufbau} {uhrzeit}. Zeilen mit leerem Platzhalter (z. B. kein Beginn eingetragen) werden automatisch weggelassen.</div>
+    ${tpl("confirm","E-Mail-Vorlage: Anmeldebestätigung")}${tpl("wait","E-Mail-Vorlage: Warteliste")}${tpl("remind","E-Mail-Vorlage: Erinnerung (1 Tag vorher)")}
+    <div class="panel"><b>Datensicherung</b><div class="note">Alle Einträge liegen nur in diesem Browser auf diesem Gerät. Bitte regelmäßig sichern, besonders vor dem Löschen von Browserdaten.</div><div class="acts" style="margin-top:10px"><button class="b" data-act="backup">Daten sichern</button><button class="b" data-act="restore">Daten wiederherstellen</button></div></div>
+    <div class="acts"><button class="b pri" data-act="savesettings">Einstellungen speichern</button><button class="b" data-act="resettpl">Vorlagen zurücksetzen</button></div>`;
+}
+
+/* ---------- Modal ---------- */
+function openModal(html){ $("#modal").innerHTML=html; $("#ov").classList.add("on"); }
+function closeModal(){ $("#ov").classList.remove("on"); $("#modal").innerHTML=""; }
+
+function entryForm(e, day){
+  const R=regs(day);
+  const standOpts = e && e.status==="angemeldet" ? `<label>Standnummer</label><select id="f_stand">${Array.from({length:S.settings.capacity},(_,i)=>i+1).filter(n=>n===e.stand||!R.some(x=>x.stand===n&&x.id!==e.id)).map(n=>`<option ${n===e.stand?"selected":""}>${n}</option>`).join("")}</select>` : "";
+  return `<h3>${e?"Teilnehmer:in bearbeiten":"Person anmelden"}</h3>
+   ${!e?`<div class="note">${free(day)===null?"Alle Stände sind vergeben – die Person kommt auf die Warteliste.":"Stand "+free(day)+" wird automatisch vergeben."}</div>`:""}
+   <label>Name *</label><input id="f_name" value="${esc(e?.name)}">
+   <div class="two"><div><label>E-Mail *</label><input id="f_mail" type="email" value="${esc(e?.email)}"></div><div><label>Telefon</label><input id="f_phone" value="${esc(e?.phone)}"></div></div>
+   <label>Notiz (z. B. Kleidung, Kinderspielzeug …)</label><input id="f_note" value="${esc(e?.note)}">${standOpts}
+   <div id="f_err" class="err"></div>
+   <div class="mfoot"><button class="b" data-act="close">Abbrechen</button><button class="b pri" data-act="saveentry" data-day="${day}" data-id="${e?.id||""}">Speichern</button></div>`;
+}
+
+function mailModal(to, bcc, subject, body, entryId, kind){
+  const mailto = "mailto:"+encodeURIComponent(to||"")+"?"+(bcc?"bcc="+encodeURIComponent(bcc)+"&":"")+"subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body.replace(/\n/g,"\r\n"));
+  openModal(`<h3>E-Mail vorbereitet</h3><div class="note">Mit „E-Mail-Programm öffnen“ startet dein Mailprogramm. Falls das nicht klappt, kopiere die Felder einfach nacheinander in dein Mail-Postfach.</div>
+   <div class="copyrow"><div><label>${bcc?"Empfänger (BCC – für Gruppe)":"Empfänger"}</label><input id="m_to" readonly value="${esc(bcc||to)}"></div><button class="b" data-act="copy" data-src="m_to">Kopieren</button></div>
+   <div class="copyrow"><div><label>Betreff</label><input id="m_s" readonly value="${esc(subject)}"></div><button class="b" data-act="copy" data-src="m_s">Kopieren</button></div>
+   <div class="copyrow"><div><label>Text</label><textarea id="m_b" readonly style="min-height:260px">${esc(body)}</textarea></div><button class="b" data-act="copy" data-src="m_b">Kopieren</button></div>
+   <div class="mfoot"><button class="b" data-act="close">Schließen</button>
+   ${entryId&&kind==="confirm"?`<button class="b" data-act="markSent" data-id="${entryId}">Als gesendet markieren</button>`:""}
+   <a class="b pri" href="${mailto}" target="_blank" rel="noopener">E-Mail-Programm öffnen</a></div>`);
+}
+
+/* ---------- Aktionen ---------- */
+document.addEventListener("click", async ev=>{
+  const el = ev.target.closest("[data-act]"); if(!el) { if(ev.target.id==="ov") closeModal(); return; }
+  const act=el.dataset.act, id=el.dataset.id, find=i=>S.entries.find(e=>e.id===i);
+  switch(act){
+    case "day": S.day=id; render(); break;
+    case "sub": S.sub=id; render(); break;
+    case "close": closeModal(); break;
+    case "copy": { const f=$("#"+el.dataset.src); f.select(); try{ await navigator.clipboard.writeText(f.value); el.textContent="✓ Kopiert"; }catch{ document.execCommand&&document.execCommand("copy"); el.textContent="Markiert – bitte Strg/Cmd+C"; } break; }
+    case "addday":
+      openModal(`<h3>Flohmarkt-Sonntag hinzufügen</h3><label>Datum (Sonntag)</label><input id="d_date" type="date"><div id="d_err" class="err"></div>
+      <div class="mfoot"><button class="b" data-act="close">Abbrechen</button><button class="b pri" data-act="saveday">Hinzufügen</button></div>`); break;
+    case "saveday": {
+      const v=$("#d_date").value; if(!v){ $("#d_err").textContent="Bitte ein Datum wählen."; break; }
+      if(new Date(v+"T12:00:00").getDay()!==0){ $("#d_err").textContent="Das ist kein Sonntag."; break; }
+      const did="d"+v; if(S.days.find(d=>d.id===did)){ $("#d_err").textContent="Dieser Sonntag existiert schon."; break; }
+      await save("days/"+did,{date:v}); S.day=did; closeModal(); break; }
+    case "delday": {
+      const n=dayEntries(id).length;
+      openModal(`<h3>Sonntag löschen?</h3><p>${esc(fmtDate(id))}${n?` mit <b>${n} Einträgen</b>`:""} wird endgültig gelöscht.</p><div class="mfoot"><button class="b" data-act="close">Abbrechen</button><button class="b pri" data-act="confdelday" data-id="${id}">Ja, löschen</button></div>`); break; }
+    case "confdelday": { for(const e of dayEntries(id)) await remove("entries/"+e.id); await remove("days/"+id); S.day=null; closeModal(); break; }
+    case "addentry": openModal(entryForm(null,id)); break;
+    case "edit": { const e=find(id); openModal(entryForm(e,e.dayId)); break; }
+    case "saveentry": {
+      const day=el.dataset.day, e=id?find(id):null;
+      const name=$("#f_name").value.trim(), mail=$("#f_mail").value.trim();
+      if(!name){ $("#f_err").textContent="Bitte einen Namen eintragen."; break; }
+      if(!mail || !/^\S+@\S+\.\S+$/.test(mail)){ $("#f_err").textContent="Bitte eine gültige E-Mail-Adresse eintragen."; break; }
+      const base={name,email:mail,phone:$("#f_phone").value.trim(),note:$("#f_note").value.trim()};
+      if(e){ if($("#f_stand")) base.stand=Number($("#f_stand").value); await patch("entries/"+e.id,base); }
+      else { const st=freeStand(day); const nid=uid("e");
+        await save("entries/"+nid,{...base,dayId:day,status:st?"angemeldet":"warteliste",stand:st||null,paid:false,checkedIn:false,confirmSent:false,createdAt:Date.now()});
+        if(!st) toast("Alle Stände vergeben – auf die Warteliste gesetzt."); }
+      closeModal(); break; }
+    case "checkin": { const e=find(id); await patch("entries/"+id,{checkedIn:!e.checkedIn}); break; }
+    case "paid": { const e=find(id); await patch("entries/"+id,{paid:!e.paid}); break; }
+    case "promote": { const e=find(id), st=freeStand(e.dayId); if(st===null){ toast("Kein Stand frei."); break; }
+      await patch("entries/"+id,{status:"angemeldet",stand:st}); S.sub="teil";
+      toast(`${e.name} ist auf Stand ${st} nachgerückt – jetzt die Bestätigung schicken.`); break; }
+    case "del": { const e=find(id);
+      openModal(`<h3>${e.status==="angemeldet"?"Absage / Eintrag löschen?":"Von der Warteliste löschen?"}</h3><p><b>${esc(e.name)}</b> wird endgültig gelöscht${e.status==="angemeldet"?` und Stand ${e.stand} wird wieder frei`:""}.</p>
+      <div class="mfoot"><button class="b" data-act="close">Abbrechen</button><button class="b pri" data-act="confdel" data-id="${id}">Ja, löschen</button></div>`); break; }
+    case "confdel": await remove("entries/"+id); closeModal(); break;
+    case "markSent": await patch("entries/"+id,{confirmSent:true}); closeModal(); break;
+    case "mail": { const e=find(id), k=el.dataset.kind, t=S.tpl[k], v=vars(e,e.dayId);
+      mailModal(e.email,"",fill(t.subject,v),fill(t.body,v),e.id,k); break; }
+    case "remindall": { const R=regs(id).filter(e=>e.email);
+      if(!R.length){ toast("Noch keine angemeldeten Personen mit E-Mail."); break; }
+      const v={...vars(null,id),vorname:"zusammen",stand:""}; const t=S.tpl.remind;
+      const body=fill(t.body,{...v,vorname:"ihr Lieben"}).replace(/^Hallo ihr Lieben,/,"Hallo zusammen,");
+      mailModal("",R.map(e=>e.email).join(","),fill(t.subject,v),body,null,"remind"); break; }
+    case "savesettings": {
+      const g=i=>$("#"+i).value;
+      const settings={cafe:g("s_cafe").trim()||DEFAULT_SETTINGS.cafe,contactEmail:g("s_mail").trim(),fee:Number(g("s_fee"))||0,capacity:Math.max(1,Number(g("s_cap"))||10),uhrzeit:g("s_time").trim(),aufbau:Number(g("s_set"))||0};
+      const tpl={}; for(const k of Object.keys(DEFAULT_TPL)) tpl[k]={subject:g(`t_${k}_s`),body:g(`t_${k}_b`)};
+      await save("settings/main",{settings,tpl}); toast("Gespeichert ✓"); break; }
+    case "backup": { STORE.markBackup(); const txt=STORE.export();
+      openModal(`<h3>Daten sichern</h3><div class="note">Kopiere den Text und speichere ihn z. B. in einer Notiz oder per E-Mail an dich selbst. Oder lade ihn als Datei herunter.</div><textarea id="bk" readonly style="min-height:220px">${esc(txt)}</textarea><div class="mfoot"><button class="b" data-act="close">Schließen</button><button class="b" data-act="copy" data-src="bk">Kopieren</button><a class="b pri" download="flohmarkt-sicherung.json" href="data:application/json;charset=utf-8,${encodeURIComponent(txt)}">Als Datei laden</a></div>`); break; }
+    case "restore":
+      openModal(`<h3>Daten wiederherstellen</h3><div class="note">Achtung: Das ersetzt alle aktuellen Einträge. Füge den gesicherten Text ein.</div><textarea id="rs" style="min-height:220px"></textarea><div id="rs_err" class="err"></div><div class="mfoot"><button class="b" data-act="close">Abbrechen</button><button class="b pri" data-act="dorestore">Wiederherstellen</button></div>`); break;
+    case "dorestore": try{ STORE.import($("#rs").value); closeModal(); toast("Wiederhergestellt ✓"); }catch(e){ $("#rs_err").textContent="Der Text ist ungültig."; } break;
+    case "resettpl": { const settings=S.settings; await save("settings/main",{settings,tpl:DEFAULT_TPL}); toast("Vorlagen zurückgesetzt."); break; }
+  }
+});
+
+/* ---------- Start ---------- */
+(async function init(){
+  STORE=makeStore(); db=STORE;
+  if(!db){ render(); return; }
+  render();
+  const timer=setTimeout(()=>{ if(!S.ready.days||!S.ready.entries){ S.ready.days=S.ready.entries=true; render(); } },10000);
+  const onErr=e=>{ console.error(e); S.ready.days=S.ready.entries=true; render(); };
+  db.collection("days").onSnapshot(s=>{ S.days=rowsOf(s); S.ready.days=true; clearTimeout(timer); render(); },onErr);
+  db.collection("entries").onSnapshot(s=>{ S.entries=rowsOf(s); S.ready.entries=true; clearTimeout(timer); render(); },onErr);
+  db.doc("settings/main").onSnapshot(s=>{
+    const d = (s && s.exists===false) ? null : dataOf(s);
+    if(d && d.settings) mergeSettings(d); else { S.settings={...DEFAULT_SETTINGS}; S.tpl=JSON.parse(JSON.stringify(DEFAULT_TPL)); }
+    render();
+  },onErr);
+})();
+</script>
+</body>
+</html>
